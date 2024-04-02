@@ -6,12 +6,12 @@ from time import time
 # ----------
 classID = 0 # 0: FAKE, 1: REAL
 confidence = 0.8
-save = False
+save = True
 debug = False
-outputFolderPath = 'Dataset/Real'
-# outputFolderPath = 'Dataset/Fake'
-blurThreshold = 100
-
+# outputFolderPath = 'Dataset/Real'
+outputFolderPath = 'Dataset/Fake'
+blurThreshold = 50
+# ----------
 offsetPercentageW = 10
 offsetPercentageH = 20
 floatingPoint = 6
@@ -23,17 +23,19 @@ floatingPoint = 6
 # ---------- PATH ----------
 os.makedirs(outputFolderPath, exist_ok=True) #exist_ok=True để không báo lỗi nếu thư mục đã tồn tại
 
-# ----------Thiết lập kích thước cho khung hình camera----------
 cap = cv2.VideoCapture(0)
+# ----------Thiết lập kích thước cho khung hình camera----------
 # cap.set(cv2.CAP_PROP_FRAME_WIDTH, desired_width)
 # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, desired_height)
+
 mp_face_detection = mp.solutions.face_detection
 mp_drawing = mp.solutions.drawing_utils
 
 while True:
     success, img = cap.read()
     img_save = img.copy()
-    blurResult = True
+    listBlur = []
+    listInfo = []
     
     
     with mp_face_detection.FaceDetection() as face_detection:
@@ -71,9 +73,9 @@ while True:
                     blurValue = int(cv2.Laplacian(imgFace, cv2.CV_64F).var())
                     print(blurValue)
                     if blurValue > blurThreshold:
-                        blurResult = True
+                        listBlur.append(True)
                     else:
-                        blurResult = False
+                        listBlur.append(False)
 
                     # ---------- Chuẩn hoá (Normalize Values) ----------
                     xc, yc = x + w / 2, y + h / 2
@@ -88,7 +90,7 @@ while True:
                     if hn > 1: hn = 1
 
                     # ---------- Thêm các giá trị Nomarlize từng dòng với classID tại [0] là label ----------
-                    info = f'{classID} {xcn} {ycn} {wn} {hn}\n'
+                    listInfo.append(f'{classID} {xcn} {ycn} {wn} {hn}\n')
 
                     # ---------- Drawing ----------
                     cv2.rectangle(img_save, (x, y), (x + w, y + h), (255, 0, 0), 2)
@@ -102,20 +104,22 @@ while True:
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
             # ---------- Save ----------
-            if save and blurResult:
+            if save:
+                if all(listBlur) and listBlur != []:
                 # ---------- Save img với khoảng thời gian hiện tại ----------
-                timeNow = time()
-                timeNow = str(timeNow).split('.')
-                timeNow = timeNow[0] + timeNow[1]
-                cv2.imwrite(f'{outputFolderPath}/{timeNow}.jpg', img)
+                    timeNow = time()
+                    timeNow = str(timeNow).split('.')
+                    timeNow = timeNow[0] + timeNow[1]
+                    cv2.imwrite(f'{outputFolderPath}/{timeNow}.jpg', img)
 
-                # ---------- Save labels .txt file ----------
-                f = open(f'{outputFolderPath}/{timeNow}.txt', 'a')
-                f.write(info)
-                f.close()
+                    # ---------- Save labels .txt file ----------
+                    for info in listInfo:
+                        f = open(f'{outputFolderPath}/{timeNow}.txt', 'a')
+                        f.write(info)
+                        f.close()
 
     cv2.imshow("img", img_save)
-    if cv2.waitKey(1) & 0xFF == 27:
+    if cv2.waitKey(1) & 0xFF == 27: #Nhấn ESC để thoát
         break
 
 cap.release()
