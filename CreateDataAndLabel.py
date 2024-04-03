@@ -4,13 +4,13 @@ import mediapipe as mp
 from time import time
 
 # ----------
-classID = 0 # 0: FAKE, 1: REAL
+classID = 1# 0: FAKE, 1: REAL
 confidence = 0.8
 save = True
 debug = False
-# outputFolderPath = 'Dataset/Real'
-outputFolderPath = 'Dataset/Fake'
-blurThreshold = 50
+outputFolderPath = 'Dataset/Real'
+# outputFolderPath = 'Dataset/Fake'
+blurThreshold = 30
 # ----------
 offsetPercentageW = 10
 offsetPercentageH = 20
